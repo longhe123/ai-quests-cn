@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI探索任务营</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="AI探索任务营首页">
+        <span class="brand-mark">AI</span>
+        <span>探索任务营</span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <a href="#quests">任务</a>
+        <a href="#lab">实验室</a>
+        <a href="#teacher">教师资源</a>
+      </nav>
+      <button class="icon-button" id="resetProgress" type="button" aria-label="重置进度" title="重置进度">↻</button>
+    </header>
+
+    <main id="home">
+      <section class="hero" aria-labelledby="heroTitle">
+        <div class="hero-visual" role="img" aria-label="中国城市、校园和数据网络组成的AI学习场景">
+          <div class="city-skyline">
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="river"></div>
+          <div class="data-path path-a"></div>
+          <div class="data-path path-b"></div>
+          <div class="pulse p1"></div>
+          <div class="pulse p2"></div>
+          <div class="pulse p3"></div>
+          <div class="student-card">
+            <strong>任务 01</strong>
+            <span>暴雨预警模型上线测试</span>
+          </div>
+        </div>
+        <div class="hero-copy">
+          <p class="eyebrow">面向中国中学生的 AI 素养闯关网站</p>
+          <h1 id="heroTitle">AI探索任务营</h1>
+          <p>
+            在城市、校园、医院和博物馆的真实情境里，学生像小研究员一样收集数据、训练模型、
+            判断风险，并讨论 AI 该如何负责任地使用。
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#quests">开始任务</a>
+            <a class="ghost-button" href="#teacher">查看课堂方案</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="progress-band" aria-label="学习进度">
+        <div>
+          <span class="stat-value" id="completedCount">0</span>
+          <span class="stat-label">已完成任务</span>
+        </div>
+        <div>
+          <span class="stat-value" id="scoreValue">0</span>
+          <span class="stat-label">研究积分</span>
+        </div>
+        <div>
+          <span class="stat-value" id="badgeValue">新手</span>
+          <span class="stat-label">研究员等级</span>
+        </div>
+      </section>
+
+      <section class="quest-section" id="quests" aria-labelledby="questsTitle">
+        <div class="section-heading">
+          <p class="eyebrow">Choose a quest</p>
+          <h2 id="questsTitle">选择你的 AI 任务</h2>
+        </div>
+        <div class="quest-grid" id="questGrid"></div>
+      </section>
+
+      <section class="lab" id="lab" aria-labelledby="labTitle">
+        <div class="lab-panel">
+          <div class="lab-header">
+            <p class="eyebrow">Interactive lab</p>
+            <h2 id="labTitle">任务实验室</h2>
+            <p id="labIntro">选择一个任务，开始你的研究流程。</p>
+          </div>
+          <div class="mission-meta" id="missionMeta"></div>
+        </div>
+
+        <div class="workflow" aria-label="任务流程">
+          <article class="step-panel">
+            <span class="step-number">01</span>
+            <h3>判断数据质量</h3>
+            <p id="dataPrompt"></p>
+            <div class="data-options" id="dataOptions"></div>
+          </article>
+
+          <article class="step-panel">
+            <span class="step-number">02</span>
+            <h3>训练模型</h3>
+            <p>调整训练轮次，观察准确率和误报率的变化。</p>
+            <label class="slider-label" for="trainingRange">
+              训练轮次
+              <strong id="epochValue">6</strong>
+            </label>
+            <input id="trainingRange" type="range" min="1" max="12" value="6" />
+            <div class="meter-grid">
+              <div>
+                <span>准确率</span>
+                <div class="meter"><i id="accuracyMeter"></i></div>
+                <strong id="accuracyValue">76%</strong>
+              </div>
+              <div>
+                <span>误报率</span>
+                <div class="meter danger"><i id="falseAlarmMeter"></i></div>
+                <strong id="falseAlarmValue">18%</strong>
+              </div>
+            </div>
+          </article>
+
+          <article class="step-panel">
+            <span class="step-number">03</span>
+            <h3>研究员判断</h3>
+            <p id="quizQuestion"></p>
+            <div class="quiz-options" id="quizOptions"></div>
+            <p class="feedback" id="feedback" aria-live="polite"></p>
+          </article>
+        </div>
+      </section>
+
+      <section class="teacher" id="teacher" aria-labelledby="teacherTitle">
+        <div>
+          <p class="eyebrow">For classrooms</p>
+          <h2 id="teacherTitle">课堂使用方案</h2>
+          <p>
+            每个任务适合 35-45 分钟课堂，可用于信息科技、科学、综合实践或社团活动。
+            教师可以先让学生独立闯关，再组织小组辩论 AI 的边界和责任。
+          </p>
+        </div>
+        <div class="teacher-list">
+          <div>
+            <strong>学习目标</strong>
+            <span>理解数据、模型、评估和伦理之间的关系。</span>
+          </div>
+          <div>
+            <strong>课堂产出</strong>
+            <span>一份模型上线建议书和一条负责任 AI 原则。</span>
+          </div>
+          <div>
+            <strong>适用年级</strong>
+            <span>小学高年级至初中，可按难度增减讨论深度。</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
