@@ -207,6 +207,15 @@ const resultModal = document.querySelector("#resultModal");
 const resultSummary = document.querySelector("#resultSummary");
 const resultBadge = document.querySelector("#resultBadge");
 const resultConcept = document.querySelector("#resultConcept");
+const launchScreen = document.querySelector("#launchScreen");
+const acceptMission = document.querySelector("#acceptMission");
+const skipLaunch = document.querySelector("#skipLaunch");
+const companionLine = document.querySelector("#companionLine");
+const storyTitle = document.querySelector("#storyTitle");
+const storyText = document.querySelector("#storyText");
+const startQuestFlow = document.querySelector("#startQuestFlow");
+const workflow = document.querySelector("#workflow");
+const openMissionMap = document.querySelector("#openMissionMap");
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
@@ -259,6 +268,7 @@ function renderMap() {
     node.addEventListener("click", () => {
       state.activeQuest = quests.find((quest) => quest.id === node.dataset.id);
       feedback.textContent = "";
+      setCompanionLine(`已载入「${state.activeQuest.title}」。阅读任务简报后，点击“开始这一关”。`);
       render();
       document.querySelector("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -284,8 +294,13 @@ function renderLab() {
     button.addEventListener("click", () => {
       const option = quest.data[Number(button.dataset.data)];
       markChoice(button, option.correct);
-      if (option.correct) addScore(8, "数据判断正确。好研究员先问数据从哪来、代表谁、缺了谁。");
-      else feedback.textContent = "再想想：模型不是魔法，训练数据如果片面，答案也会片面。";
+      if (option.correct) {
+        addScore(8, "数据判断正确。好研究员先问数据从哪来、代表谁、缺了谁。");
+        setCompanionLine("很好！数据质量过关。现在调一下训练轮次，观察准确率和误报率的变化。");
+      } else {
+        feedback.textContent = "再想想：模型不是魔法，训练数据如果片面，答案也会片面。";
+        setCompanionLine("小启提醒：真实任务里，数据来源比模型名字更重要。再选一次。");
+      }
     });
   });
 
@@ -294,7 +309,10 @@ function renderLab() {
       const option = quest.answers[Number(button.dataset.answer)];
       markChoice(button, option.correct);
       if (option.correct) completeQuest(quest);
-      else feedback.textContent = "这一步要把准确率、风险人群和真实后果放在一起看。";
+      else {
+        feedback.textContent = "这一步要把准确率、风险人群和真实后果放在一起看。";
+        setCompanionLine("不要只看总体准确率。想想谁可能被模型忽略，错误会造成什么后果。");
+      }
     });
   });
 }
@@ -312,11 +330,15 @@ function addScore(points, message) {
   persist();
   renderProgress();
   renderProfile();
+  renderStoryBriefing();
 }
 
 function completeQuest(quest) {
   const firstCompletion = !state.completed.has(quest.id);
   state.completed.add(quest.id);
+  document.body.classList.add("mission-cleared");
+  setTimeout(() => document.body.classList.remove("mission-cleared"), 1200);
+  setCompanionLine(`任务完成！你刚刚解锁了「${quest.concept.title}」概念卡。`);
   state.badges.add(quest.badge.id);
   state.concepts.add(quest.id);
   addScore(firstCompletion ? 18 : 6, firstCompletion ? "任务完成。你做出了负责任的上线判断。" : "复盘成功。重复挑战也能巩固判断。");
@@ -375,15 +397,50 @@ function renderProfile() {
     : `<span class="empty-state">完成任务后会解锁 AI 概念卡。</span>`;
 }
 
+
+function setCompanionLine(message) {
+  companionLine.textContent = message;
+  document.querySelector("#companionPanel").classList.remove("speaking");
+  requestAnimationFrame(() => document.querySelector("#companionPanel").classList.add("speaking"));
+}
+
+function renderStoryBriefing() {
+  const quest = state.activeQuest;
+  storyTitle.textContent = `第 ${quests.findIndex((item) => item.id === quest.id) + 1} 关：${quest.title}`;
+  storyText.textContent = `任务地点已锁定：${quest.scene} 小启建议你先判断数据，再调试模型，最后决定是否上线。`;
+  workflow.classList.remove("quest-live");
+}
+
+function beginQuestFlow() {
+  workflow.classList.add("quest-live");
+  setCompanionLine(`进入「${state.activeQuest.title}」。第一步：别急着训练模型，先检查数据是否真实、完整、代表不同人群。`);
+  document.querySelector("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function closeLaunchScreen() {
+  launchScreen.classList.add("launch-hidden");
+  setTimeout(() => launchScreen.remove(), 650);
+  setCompanionLine("欢迎进入任务营。我是小启，会陪你完成每一次 AI 决策。先从任务地图选择一个关卡吧。");
+}
+
 function render() {
   renderMap();
   renderLab();
   renderTraining();
   renderProgress();
   renderProfile();
+  renderStoryBriefing();
 }
 
-trainingRange.addEventListener("input", renderTraining);
+trainingRange.addEventListener("input", () => {
+  renderTraining();
+  setCompanionLine("训练轮次改变了。注意：准确率变高不等于一定可以上线，还要看误报、漏报和受影响人群。");
+});
+
+acceptMission.addEventListener("click", closeLaunchScreen);
+skipLaunch.addEventListener("click", closeLaunchScreen);
+openMissionMap.addEventListener("click", () => setCompanionLine("地图节点会随着任务完成被点亮。建议先挑战城市暴雨预警。"));
+startQuestFlow.addEventListener("click", beginQuestFlow);
 
 document.querySelector("#resetProgress").addEventListener("click", () => {
   if (!window.confirm("确定要清空当前浏览器里的闯关进度吗？")) return;

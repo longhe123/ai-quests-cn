@@ -7,6 +7,39 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div class="launch-screen" id="launchScreen" aria-label="任务启动舱">
+      <div class="star-field" aria-hidden="true"></div>
+      <div class="orbit-ring orbit-a" aria-hidden="true"></div>
+      <div class="orbit-ring orbit-b" aria-hidden="true"></div>
+      <div class="launch-card">
+        <div class="launch-logos">
+          <span>AI探索任务营</span>
+          <span>学生研究员计划</span>
+        </div>
+        <h1>接受你的 AI 任务</h1>
+        <p>和 AI 伙伴“小启”一起进入中国城市、校园、医院和博物馆，完成一场负责任的 AI 探险。</p>
+        <button class="mission-button" id="acceptMission" type="button">接受任务</button>
+        <button class="quiet-button" id="skipLaunch" type="button">直接进入任务地图</button>
+      </div>
+      <div class="planet-stage" aria-hidden="true">
+        <div class="planet-core"></div>
+        <div class="satellite s-a"></div>
+        <div class="satellite s-b"></div>
+      </div>
+    </div>
+
+    <aside class="companion" id="companionPanel" aria-live="polite">
+      <div class="companion-avatar" aria-hidden="true">
+        <span class="bot-eye left"></span>
+        <span class="bot-eye right"></span>
+        <span class="bot-mouth"></span>
+      </div>
+      <div>
+        <strong>AI伙伴 小启</strong>
+        <p id="companionLine">准备好了吗？选择一个任务，我会给你任务简报。</p>
+      </div>
+    </aside>
+
     <header class="topbar">
       <a class="brand" href="#home" aria-label="AI探索任务营首页">
         <span class="brand-mark">AI</span>
@@ -45,7 +78,7 @@
             最后做出负责任的 AI 上线判断。
           </p>
           <div class="hero-actions">
-            <a class="primary-button" href="#map">打开任务地图</a>
+            <a class="primary-button" href="#map" id="openMissionMap">打开任务地图</a>
             <a class="ghost-button" href="#profile">查看我的档案</a>
           </div>
         </div>
@@ -85,7 +118,17 @@
           <div class="mission-meta" id="missionMeta"></div>
         </div>
 
-        <div class="workflow" aria-label="任务流程">
+        <div class="story-briefing" id="storyBriefing">
+          <div class="briefing-avatar" aria-hidden="true">启</div>
+          <div>
+            <span>任务简报</span>
+            <h3 id="storyTitle">城市暴雨预警</h3>
+            <p id="storyText">读取任务档案中……</p>
+          </div>
+          <button class="briefing-button" id="startQuestFlow" type="button">开始这一关</button>
+        </div>
+
+        <div class="workflow" id="workflow" aria-label="任务流程">
           <article class="step-panel">
             <span class="step-number">01</span>
             <h3>判断数据质量</h3>
@@ -155,6 +198,7 @@
       <p class="eyebrow">Mission complete</p>
       <h2 id="resultTitle">任务完成</h2>
       <p id="resultSummary"></p>
+      <div class="celebration-burst" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
       <div class="reward-grid">
         <div>
           <span>获得徽章</span>
