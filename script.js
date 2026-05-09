@@ -178,8 +178,49 @@ const state = {
   completed: new Set(JSON.parse(localStorage.getItem(storageKeys.completed) || "[]")),
   badges: new Set(JSON.parse(localStorage.getItem(storageKeys.badges) || "[]")),
   concepts: new Set(JSON.parse(localStorage.getItem(storageKeys.concepts) || "[]")),
-  score: Number(localStorage.getItem(storageKeys.score) || 0)
+  score: Number(localStorage.getItem(storageKeys.score) || 0),
+  sceneIndex: 0
 };
+
+const rainStorySteps = [
+  {
+    status: "暴雨云团接近",
+    chip: "20:10 城市气象中心",
+    speaker: "AI伙伴 小启",
+    text: "研究员，雷达发现强降雨云团正在靠近。城市低洼片区可能在 40 分钟内出现积水，我们需要训练一个预警模型。",
+    stage: "scene-rain"
+  },
+  {
+    status: "数据接入中",
+    chip: "传感器 / 河道 / 地势",
+    speaker: "气象数据官",
+    text: "这里有降雨量、河道水位、历史积水点和地势数据。注意：如果老城区传感器少，模型可能会低估那里。",
+    stage: "scene-data"
+  },
+  {
+    status: "模型训练准备",
+    chip: "训练舱启动",
+    speaker: "AI伙伴 小启",
+    text: "下一步你要选择最可靠的数据，并调试训练轮次。准确率不是唯一目标，误报率和漏报风险同样重要。",
+    stage: "scene-model"
+  },
+  {
+    status: "上线前审查",
+    chip: "老城区风险提示",
+    speaker: "应急指挥员",
+    text: "模型总体表现不错，但老城区样本不足。你必须决定：直接上线，还是补充数据后再分区域评估？",
+    stage: "scene-ethics"
+  }
+];
+
+function getStorySteps(quest) {
+  if (quest.id === "rain") return rainStorySteps;
+  return [
+    { status: "任务接入", chip: quest.code, speaker: "AI伙伴 小启", text: `欢迎进入「${quest.title}」。先理解真实场景，再做 AI 决策。`, stage: "scene-data" },
+    { status: "操作准备", chip: "数据 / 模型 / 判断", speaker: "AI伙伴 小启", text: "这一关仍然遵循三步：判断数据质量、调试模型、做负责任的上线判断。", stage: "scene-model" }
+  ];
+}
+
 
 const zoneGrid = document.querySelector("#zoneGrid");
 const labIntro = document.querySelector("#labIntro");
@@ -216,6 +257,16 @@ const storyText = document.querySelector("#storyText");
 const startQuestFlow = document.querySelector("#startQuestFlow");
 const workflow = document.querySelector("#workflow");
 const openMissionMap = document.querySelector("#openMissionMap");
+const cinematicQuest = document.querySelector("#cinematicQuest");
+const sceneStage = document.querySelector("#sceneStage");
+const sceneChip = document.querySelector("#sceneChip");
+const sceneStepLabel = document.querySelector("#sceneStepLabel");
+const sceneStatus = document.querySelector("#sceneStatus");
+const dialogueSpeaker = document.querySelector("#dialogueSpeaker");
+const dialogueText = document.querySelector("#dialogueText");
+const sceneProgress = document.querySelector("#sceneProgress");
+const advanceScene = document.querySelector("#advanceScene");
+const jumpToLab = document.querySelector("#jumpToLab");
 
 function escapeHtml(value) {
   return String(value).replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char]);
@@ -268,6 +319,7 @@ function renderMap() {
     node.addEventListener("click", () => {
       state.activeQuest = quests.find((quest) => quest.id === node.dataset.id);
       feedback.textContent = "";
+      resetSceneFlow();
       setCompanionLine(`已载入「${state.activeQuest.title}」。阅读任务简报后，点击“开始这一关”。`);
       render();
       document.querySelector("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -404,17 +456,60 @@ function setCompanionLine(message) {
   requestAnimationFrame(() => document.querySelector("#companionPanel").classList.add("speaking"));
 }
 
+function renderCinematicQuest() {
+  const steps = getStorySteps(state.activeQuest);
+  const step = steps[Math.min(state.sceneIndex, steps.length - 1)];
+  sceneStepLabel.textContent = `剧情 ${Math.min(state.sceneIndex + 1, steps.length)} / ${steps.length}`;
+  sceneStatus.textContent = step.status;
+  sceneChip.textContent = step.chip;
+  dialogueSpeaker.textContent = step.speaker;
+  dialogueText.textContent = step.text;
+  sceneProgress.innerHTML = steps.map((_, index) => `<span class="${index <= state.sceneIndex ? "active" : ""}"></span>`).join("");
+  sceneStage.className = `scene-stage ${step.stage}`;
+  advanceScene.textContent = state.sceneIndex >= steps.length - 1 ? "进入实验操作" : "下一步";
+}
+
+function resetSceneFlow() {
+  state.sceneIndex = 0;
+  cinematicQuest.classList.remove("cinematic-live", "cinematic-complete");
+  renderCinematicQuest();
+}
+
+function advanceStoryScene() {
+  const steps = getStorySteps(state.activeQuest);
+  cinematicQuest.classList.add("cinematic-live");
+  if (state.sceneIndex < steps.length - 1) {
+    state.sceneIndex += 1;
+    renderCinematicQuest();
+    setCompanionLine(getStorySteps(state.activeQuest)[state.sceneIndex].text);
+    return;
+  }
+  cinematicQuest.classList.add("cinematic-complete");
+  workflow.classList.add("quest-live");
+  setCompanionLine("剧情简报完成。现在进入实验操作：先选择最可靠的数据。解题时别忘了老城区风险。 ");
+  document.querySelector("#workflow").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function jumpIntoLab() {
+  cinematicQuest.classList.add("cinematic-live", "cinematic-complete");
+  workflow.classList.add("quest-live");
+  setCompanionLine("已进入实验操作。你可以直接完成数据、模型和上线判断三步。 ");
+  document.querySelector("#workflow").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function renderStoryBriefing() {
   const quest = state.activeQuest;
   storyTitle.textContent = `第 ${quests.findIndex((item) => item.id === quest.id) + 1} 关：${quest.title}`;
-  storyText.textContent = `任务地点已锁定：${quest.scene} 小启建议你先判断数据，再调试模型，最后决定是否上线。`;
-  workflow.classList.remove("quest-live");
+  storyText.textContent = `任务地点已锁定：${quest.scene} 小启建议你先看剧情分镜，再判断数据、调试模型，最后决定是否上线。`;
+  renderCinematicQuest();
 }
 
 function beginQuestFlow() {
-  workflow.classList.add("quest-live");
-  setCompanionLine(`进入「${state.activeQuest.title}」。第一步：别急着训练模型，先检查数据是否真实、完整、代表不同人群。`);
-  document.querySelector("#lab").scrollIntoView({ behavior: "smooth", block: "start" });
+  cinematicQuest.classList.add("cinematic-live");
+  state.sceneIndex = 0;
+  renderCinematicQuest();
+  setCompanionLine(`进入「${state.activeQuest.title}」剧情。先看分镜简报，再进入实验操作。`);
+  cinematicQuest.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 function closeLaunchScreen() {
@@ -441,6 +536,8 @@ acceptMission.addEventListener("click", closeLaunchScreen);
 skipLaunch.addEventListener("click", closeLaunchScreen);
 openMissionMap.addEventListener("click", () => setCompanionLine("地图节点会随着任务完成被点亮。建议先挑战城市暴雨预警。"));
 startQuestFlow.addEventListener("click", beginQuestFlow);
+advanceScene.addEventListener("click", advanceStoryScene);
+jumpToLab.addEventListener("click", jumpIntoLab);
 
 document.querySelector("#resetProgress").addEventListener("click", () => {
   if (!window.confirm("确定要清空当前浏览器里的闯关进度吗？")) return;

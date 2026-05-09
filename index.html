@@ -128,6 +128,30 @@
           <button class="briefing-button" id="startQuestFlow" type="button">开始这一关</button>
         </div>
 
+        <section class="cinematic-quest" id="cinematicQuest" aria-label="分镜剧情关卡">
+          <div class="scene-stage" id="sceneStage">
+            <div class="rain-layer" aria-hidden="true"></div>
+            <div class="map-grid" aria-hidden="true"></div>
+            <div class="warning-beacon" aria-hidden="true"></div>
+            <div class="old-town" aria-hidden="true"><span></span><span></span><span></span></div>
+            <div class="river-alert" aria-hidden="true"></div>
+            <div class="scene-chip" id="sceneChip">任务待启动</div>
+          </div>
+          <div class="dialogue-console">
+            <div class="dialogue-topline">
+              <span id="sceneStepLabel">剧情 0 / 4</span>
+              <span id="sceneStatus">等待进入</span>
+            </div>
+            <h3 id="dialogueSpeaker">AI伙伴 小启</h3>
+            <p id="dialogueText">点击“开始这一关”，进入城市暴雨预警剧情。</p>
+            <div class="scene-progress" id="sceneProgress" aria-label="剧情进度"></div>
+            <div class="dialogue-actions">
+              <button class="briefing-button" id="advanceScene" type="button">下一步</button>
+              <button class="quiet-scene-button" id="jumpToLab" type="button">进入实验操作</button>
+            </div>
+          </div>
+        </section>
+
         <div class="workflow" id="workflow" aria-label="任务流程">
           <article class="step-panel">
             <span class="step-number">01</span>

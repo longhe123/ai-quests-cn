@@ -567,3 +567,158 @@ input[type="range"] { width: 100%; accent-color: var(--green-dark); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
 }
+
+
+/* Storyboard quest mode */
+.cinematic-quest {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, .95fr);
+  gap: 18px;
+  align-items: stretch;
+  margin: 0 0 24px;
+  opacity: .86;
+  transform: translateY(8px);
+  transition: opacity .35s ease, transform .35s ease;
+}
+.cinematic-quest.cinematic-live { opacity: 1; transform: none; }
+.scene-stage {
+  position: relative;
+  min-height: 330px;
+  overflow: hidden;
+  border-radius: 30px;
+  border: 1px solid rgba(143, 247, 212, .22);
+  background:
+    radial-gradient(circle at 25% 20%, rgba(143, 247, 212, .28), transparent 18%),
+    linear-gradient(155deg, #07142a 0%, #0f3b51 48%, #112f2b 100%);
+  box-shadow: var(--shadow), inset 0 0 80px rgba(95, 212, 255, .08);
+}
+.scene-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 94%, rgba(143,247,212,.12) 95%), linear-gradient(90deg, transparent 94%, rgba(143,247,212,.1) 95%);
+  background-size: 34px 34px;
+  transform: perspective(500px) rotateX(58deg) translateY(86px) scale(1.35);
+  transform-origin: bottom;
+  opacity: .55;
+}
+.rain-layer {
+  position: absolute;
+  inset: -30%;
+  background-image: linear-gradient(115deg, transparent 0 46%, rgba(174, 238, 255, .55) 48%, transparent 50%);
+  background-size: 22px 48px;
+  animation: rainFall .55s linear infinite;
+  opacity: .28;
+}
+.map-grid {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 22%;
+  height: 42%;
+  border: 2px solid rgba(143,247,212,.26);
+  border-radius: 24px;
+  background: radial-gradient(circle at 28% 48%, rgba(247,214,107,.35), transparent 9%), radial-gradient(circle at 72% 38%, rgba(217,74,56,.45), transparent 8%), rgba(255,255,255,.04);
+  box-shadow: inset 0 0 30px rgba(143,247,212,.1);
+  animation: mapScan 3s ease-in-out infinite;
+}
+.warning-beacon {
+  position: absolute;
+  right: 18%;
+  top: 18%;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: #f7d66b;
+  box-shadow: 0 0 0 0 rgba(247,214,107,.5);
+  animation: alertPulse 1.2s ease-out infinite;
+}
+.old-town {
+  position: absolute;
+  left: 12%;
+  bottom: 18%;
+  display: flex;
+  align-items: end;
+  gap: 9px;
+}
+.old-town span {
+  width: 34px;
+  border-radius: 8px 8px 2px 2px;
+  background: rgba(255,255,255,.72);
+  box-shadow: 0 10px 26px rgba(0,0,0,.18);
+}
+.old-town span:nth-child(1) { height: 58px; }
+.old-town span:nth-child(2) { height: 88px; }
+.old-town span:nth-child(3) { height: 70px; }
+.river-alert {
+  position: absolute;
+  right: -8%;
+  bottom: -8%;
+  width: 70%;
+  height: 34%;
+  border-radius: 50% 0 0 0;
+  background: linear-gradient(90deg, rgba(37,99,235,.72), rgba(96,165,250,.34));
+  animation: riverRise 3s ease-in-out infinite;
+}
+.scene-chip {
+  position: absolute;
+  left: 22px;
+  top: 22px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  color: #08241f;
+  background: rgba(143,247,212,.92);
+  font-size: 13px;
+  font-weight: 900;
+  z-index: 2;
+}
+.scene-data .map-grid { box-shadow: inset 0 0 34px rgba(143,247,212,.22), 0 0 34px rgba(143,247,212,.18); }
+.scene-model .warning-beacon { background: #8ff7d4; box-shadow: 0 0 35px rgba(143,247,212,.72); }
+.scene-ethics .map-grid { border-color: rgba(217,74,56,.72); }
+.scene-ethics .warning-beacon { background: #d94a38; }
+.dialogue-console {
+  padding: 24px;
+  border-radius: 30px;
+  color: white;
+  background: linear-gradient(155deg, #07142a, #0f2f35 58%, #173d58);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255,255,255,.12);
+}
+.dialogue-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  color: #8ff7d4;
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.dialogue-console h3 { color: #f7d66b; }
+.dialogue-console p { min-height: 96px; color: rgba(255,255,255,.78); line-height: 1.8; font-size: 17px; }
+.scene-progress { display: flex; gap: 8px; margin: 18px 0 22px; }
+.scene-progress span { flex: 1; height: 8px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
+.scene-progress span.active { background: linear-gradient(90deg, #8ff7d4, #f7d66b); box-shadow: 0 0 18px rgba(143,247,212,.25); }
+.dialogue-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.quiet-scene-button {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 999px;
+  color: white;
+  background: rgba(255,255,255,.08);
+  cursor: pointer;
+  font-weight: 900;
+}
+.cinematic-complete .scene-stage { animation: stageComplete .8s ease both; }
+
+@keyframes rainFall { to { transform: translate3d(-28px, 48px, 0); } }
+@keyframes mapScan { 50% { filter: brightness(1.22); transform: translateY(-4px); } }
+@keyframes alertPulse { 100% { box-shadow: 0 0 0 28px rgba(247,214,107,0); } }
+@keyframes riverRise { 50% { transform: translateY(-12px); } }
+@keyframes stageComplete { 50% { filter: brightness(1.35) saturate(1.3); } }
+
+@media (max-width: 980px) {
+  .cinematic-quest { grid-template-columns: 1fr; }
+  .dialogue-console p { min-height: auto; }
+}
