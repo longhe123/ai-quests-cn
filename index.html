@@ -13,9 +13,9 @@
         <span>探索任务营</span>
       </a>
       <nav class="nav" aria-label="主导航">
-        <a href="#quests">任务</a>
+        <a href="#map">任务地图</a>
         <a href="#lab">实验室</a>
-        <a href="#teacher">教师资源</a>
+        <a href="#profile">我的档案</a>
       </nav>
       <button class="icon-button" id="resetProgress" type="button" aria-label="重置进度" title="重置进度">↻</button>
     </header>
@@ -33,20 +33,20 @@
           <div class="pulse p2"></div>
           <div class="pulse p3"></div>
           <div class="student-card">
-            <strong>任务 01</strong>
-            <span>暴雨预警模型上线测试</span>
+            <strong>今日身份</strong>
+            <span>城市 AI 实验室新晋研究员</span>
           </div>
         </div>
         <div class="hero-copy">
-          <p class="eyebrow">面向中国中学生的 AI 素养闯关网站</p>
+          <p class="eyebrow">给学生玩的 AI 素养闯关世界</p>
           <h1 id="heroTitle">AI探索任务营</h1>
           <p>
-            在城市、校园、医院和博物馆的真实情境里，学生像小研究员一样收集数据、训练模型、
-            判断风险，并讨论 AI 该如何负责任地使用。
+            进入城市、校园、医院和博物馆的真实任务现场：选择数据、训练模型、发现偏差，
+            最后做出负责任的 AI 上线判断。
           </p>
           <div class="hero-actions">
-            <a class="primary-button" href="#quests">开始任务</a>
-            <a class="ghost-button" href="#teacher">查看课堂方案</a>
+            <a class="primary-button" href="#map">打开任务地图</a>
+            <a class="ghost-button" href="#profile">查看我的档案</a>
           </div>
         </div>
       </section>
@@ -66,12 +66,13 @@
         </div>
       </section>
 
-      <section class="quest-section" id="quests" aria-labelledby="questsTitle">
+      <section class="map-section" id="map" aria-labelledby="mapTitle">
         <div class="section-heading">
-          <p class="eyebrow">Choose a quest</p>
-          <h2 id="questsTitle">选择你的 AI 任务</h2>
+          <p class="eyebrow">Quest map</p>
+          <h2 id="mapTitle">选择你的探索区域</h2>
+          <p>完成任务会点亮地图节点，并解锁 AI 概念卡与研究员徽章。</p>
         </div>
-        <div class="quest-grid" id="questGrid"></div>
+        <div class="zone-grid" id="zoneGrid"></div>
       </section>
 
       <section class="lab" id="lab" aria-labelledby="labTitle">
@@ -95,7 +96,7 @@
           <article class="step-panel">
             <span class="step-number">02</span>
             <h3>训练模型</h3>
-            <p>调整训练轮次，观察准确率和误报率的变化。</p>
+            <p id="trainingHint">调整训练轮次，观察准确率和误报率的变化。</p>
             <label class="slider-label" for="trainingRange">
               训练轮次
               <strong id="epochValue">6</strong>
@@ -125,31 +126,50 @@
         </div>
       </section>
 
-      <section class="teacher" id="teacher" aria-labelledby="teacherTitle">
-        <div>
-          <p class="eyebrow">For classrooms</p>
-          <h2 id="teacherTitle">课堂使用方案</h2>
-          <p>
-            每个任务适合 35-45 分钟课堂，可用于信息科技、科学、综合实践或社团活动。
-            教师可以先让学生独立闯关，再组织小组辩论 AI 的边界和责任。
-          </p>
+      <section class="profile" id="profile" aria-labelledby="profileTitle">
+        <div class="section-heading">
+          <p class="eyebrow">Student profile</p>
+          <h2 id="profileTitle">我的研究员档案</h2>
+          <p>这里记录你的任务进度、徽章和已经掌握的 AI 概念。</p>
         </div>
-        <div class="teacher-list">
-          <div>
-            <strong>学习目标</strong>
-            <span>理解数据、模型、评估和伦理之间的关系。</span>
-          </div>
-          <div>
-            <strong>课堂产出</strong>
-            <span>一份模型上线建议书和一条负责任 AI 原则。</span>
-          </div>
-          <div>
-            <strong>适用年级</strong>
-            <span>小学高年级至初中，可按难度增减讨论深度。</span>
-          </div>
+        <div class="profile-grid">
+          <article class="profile-card rank-card">
+            <span class="profile-kicker">当前等级</span>
+            <strong id="profileRank">新手研究员</strong>
+            <p id="profileNext">完成第一个任务，解锁你的第一枚徽章。</p>
+          </article>
+          <article class="profile-card">
+            <span class="profile-kicker">徽章墙</span>
+            <div class="badge-list" id="badgeList"></div>
+          </article>
+          <article class="profile-card concepts-card">
+            <span class="profile-kicker">AI 概念卡</span>
+            <div class="concept-list" id="conceptList"></div>
+          </article>
         </div>
       </section>
     </main>
+
+    <dialog class="result-modal" id="resultModal" aria-labelledby="resultTitle">
+      <button class="modal-close" id="closeModal" type="button" aria-label="关闭">×</button>
+      <p class="eyebrow">Mission complete</p>
+      <h2 id="resultTitle">任务完成</h2>
+      <p id="resultSummary"></p>
+      <div class="reward-grid">
+        <div>
+          <span>获得徽章</span>
+          <strong id="resultBadge"></strong>
+        </div>
+        <div>
+          <span>解锁概念</span>
+          <strong id="resultConcept"></strong>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <a class="primary-button" href="#map" id="nextQuestLink">继续探索</a>
+        <a class="ghost-button" href="#profile" id="profileLink">查看档案</a>
+      </div>
+    </dialog>
 
     <script src="./script.js"></script>
   </body>
