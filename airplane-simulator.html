@@ -1,0 +1,955 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>蓝天飞行模拟器</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='80'%3E%E2%9C%88%EF%B8%8F%3C/text%3E%3C/svg%3E"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #04111f;
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      #gameCanvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+
+      .overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(4, 14, 28, 0.72);
+        backdrop-filter: blur(6px);
+        z-index: 10;
+      }
+
+      .overlay.hidden {
+        display: none;
+      }
+
+      .panel {
+        max-width: 560px;
+        width: calc(100% - 48px);
+        background: linear-gradient(160deg, rgba(13, 36, 64, 0.96), rgba(7, 20, 38, 0.96));
+        border: 1px solid rgba(120, 190, 255, 0.35);
+        border-radius: 20px;
+        padding: 32px 36px;
+        color: #e8f4ff;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+        text-align: center;
+      }
+
+      .panel .eyebrow {
+        font-size: 13px;
+        letter-spacing: 4px;
+        color: #7dc4ff;
+        margin-bottom: 8px;
+      }
+
+      .panel h1 {
+        font-size: 32px;
+        margin-bottom: 12px;
+      }
+
+      .panel p.lead {
+        color: #aaccee;
+        line-height: 1.7;
+        margin-bottom: 20px;
+      }
+
+      .controls-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px 18px;
+        text-align: left;
+        margin-bottom: 24px;
+        font-size: 14px;
+        color: #cfe6ff;
+      }
+
+      .controls-grid kbd {
+        display: inline-block;
+        min-width: 26px;
+        padding: 2px 8px;
+        margin-right: 6px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        border-bottom-width: 3px;
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 13px;
+      }
+
+      .big-button {
+        display: inline-block;
+        padding: 14px 44px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #04253f;
+        background: linear-gradient(120deg, #8fd3ff, #4ea3ff);
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(78, 163, 255, 0.45);
+        transition: transform 0.15s ease;
+      }
+
+      .big-button:hover {
+        transform: translateY(-2px) scale(1.03);
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-top: 16px;
+        color: #8db8de;
+        font-size: 13px;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        color: #cfe6ff;
+      }
+
+      #resultStats {
+        display: flex;
+        justify-content: center;
+        gap: 36px;
+        margin: 18px 0 26px;
+      }
+
+      #resultStats strong {
+        display: block;
+        font-size: 30px;
+        color: #ffd76b;
+      }
+
+      #resultStats span {
+        font-size: 13px;
+        color: #9cc1e6;
+      }
+
+      .touch-hint {
+        font-size: 12px;
+        color: #7da3c8;
+        margin-bottom: 20px;
+      }
+
+      #resultTitle.crash {
+        color: #ff8d7a;
+      }
+
+      #resultTitle.landed {
+        color: #8affc1;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="gameCanvas"></canvas>
+
+    <div class="overlay" id="startOverlay">
+      <div class="panel">
+        <p class="eyebrow">FLIGHT SIMULATOR</p>
+        <h1>蓝天飞行模拟器</h1>
+        <p class="lead">
+          驾驶飞机穿越金色光圈赢取积分，注意速度和高度——
+          失速会让机头下坠，安全降落可以获得额外奖励！
+        </p>
+        <div class="controls-grid">
+          <div><kbd>↑</kbd><kbd>↓</kbd> 俯冲 / 拉升</div>
+          <div><kbd>←</kbd><kbd>→</kbd> 左右滚转转向</div>
+          <div><kbd>W</kbd><kbd>S</kbd> 加大 / 收小油门</div>
+          <div><kbd>P</kbd> 暂停　<kbd>空格</kbd> 开始</div>
+        </div>
+        <p class="touch-hint">触屏设备：左半屏拖动＝操纵杆，右半屏上下滑动＝油门</p>
+        <button class="big-button" id="startButton" type="button">起飞！</button>
+        <br />
+        <a class="back-link" href="./index.html">← 返回 AI探索任务营</a>
+      </div>
+    </div>
+
+    <div class="overlay hidden" id="resultOverlay">
+      <div class="panel">
+        <p class="eyebrow">FLIGHT REPORT</p>
+        <h1 id="resultTitle">飞行结束</h1>
+        <p class="lead" id="resultText"></p>
+        <div id="resultStats">
+          <div><strong id="statScore">0</strong><span>总得分</span></div>
+          <div><strong id="statRings">0</strong><span>穿越光圈</span></div>
+          <div><strong id="statTime">0s</strong><span>飞行时间</span></div>
+        </div>
+        <button class="big-button" id="restartButton" type="button">再飞一次</button>
+        <br />
+        <a class="back-link" href="./index.html">← 返回 AI探索任务营</a>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        "use strict";
+
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const startOverlay = document.getElementById("startOverlay");
+        const resultOverlay = document.getElementById("resultOverlay");
+        const startButton = document.getElementById("startButton");
+        const restartButton = document.getElementById("restartButton");
+        const resultTitle = document.getElementById("resultTitle");
+        const resultText = document.getElementById("resultText");
+        const statScore = document.getElementById("statScore");
+        const statRings = document.getElementById("statRings");
+        const statTime = document.getElementById("statTime");
+
+        let W = 0;
+        let H = 0;
+        let FOCAL = 0;
+
+        function resize() {
+          const dpr = Math.min(window.devicePixelRatio || 1, 2);
+          W = window.innerWidth;
+          H = window.innerHeight;
+          canvas.width = Math.round(W * dpr);
+          canvas.height = Math.round(H * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          FOCAL = H * 0.95;
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        // ---------- 常量（米 / 秒 制的街机化数值） ----------
+        const MAX_SPEED = 110;
+        const MIN_SPEED = 26;
+        const STALL_SPEED = 38;
+        const GRAVITY = 9.8;
+        const PITCH_RATE = 0.9; // rad/s
+        const ROLL_RATE = 1.8;
+        const MAX_ROLL = Math.PI * 0.42;
+        const MAX_PITCH = Math.PI * 0.36;
+        const TURN_FACTOR = 0.85;
+        const NEAR = 1.0;
+        const VIEW_DIST = 5200;
+        const RING_RADIUS = 36;
+        const GRID = 320;
+
+        // ---------- 状态 ----------
+        const plane = {
+          x: 0,
+          y: 0,
+          z: 0,
+          yaw: 0,
+          pitch: 0,
+          roll: 0,
+          speed: 0,
+          throttle: 0,
+          vy: 0
+        };
+
+        let running = false;
+        let paused = false;
+        let score = 0;
+        let ringsPassed = 0;
+        let flightTime = 0;
+        let stallWarning = false;
+        let lowAltWarning = false;
+        let ringFlash = 0;
+        let rings = [];
+
+        const keys = Object.create(null);
+
+        // 触屏虚拟摇杆 / 油门
+        const touchStick = { active: false, id: -1, ox: 0, oy: 0, dx: 0, dy: 0 };
+        const touchThrottle = { active: false, id: -1, oy: 0, base: 0 };
+
+        // ---------- 工具 ----------
+        function clamp(v, lo, hi) {
+          return v < lo ? lo : v > hi ? hi : v;
+        }
+
+        function hash2(ix, iz) {
+          const s = Math.sin(ix * 127.1 + iz * 311.7) * 43758.5453;
+          return s - Math.floor(s);
+        }
+
+        // ---------- 光圈生成 ----------
+        function spawnRing(prev) {
+          const dist = 420 + Math.random() * 220;
+          const turn = (Math.random() - 0.5) * 0.8;
+          const yaw = prev.yaw + turn;
+          return {
+            x: prev.x + Math.sin(yaw) * dist,
+            y: clamp(prev.y + (Math.random() - 0.5) * 180, 90, 760),
+            z: prev.z + Math.cos(yaw) * dist,
+            yaw
+          };
+        }
+
+        function initRings() {
+          rings = [];
+          let prev = {
+            x: plane.x + Math.sin(plane.yaw) * 500,
+            y: plane.y,
+            z: plane.z + Math.cos(plane.yaw) * 500,
+            yaw: plane.yaw
+          };
+          rings.push(prev);
+          for (let i = 0; i < 4; i++) {
+            prev = spawnRing(prev);
+            rings.push(prev);
+          }
+        }
+
+        function resetGame() {
+          plane.x = 0;
+          plane.y = 320;
+          plane.z = 0;
+          plane.yaw = 0;
+          plane.pitch = 0;
+          plane.roll = 0;
+          plane.speed = 70;
+          plane.throttle = 0.65;
+          plane.vy = 0;
+          score = 0;
+          ringsPassed = 0;
+          flightTime = 0;
+          ringFlash = 0;
+          initRings();
+        }
+
+        // ---------- 输入 ----------
+        window.addEventListener("keydown", (e) => {
+          if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)) {
+            e.preventDefault();
+          }
+          keys[e.key.toLowerCase()] = true;
+          keys[e.key] = true;
+
+          if (e.key === " ") {
+            if (!running) {
+              if (!startOverlay.classList.contains("hidden")) startGame();
+              else if (!resultOverlay.classList.contains("hidden")) startGame();
+            }
+          }
+          if ((e.key === "p" || e.key === "P") && running) {
+            paused = !paused;
+          }
+        });
+
+        window.addEventListener("keyup", (e) => {
+          keys[e.key.toLowerCase()] = false;
+          keys[e.key] = false;
+        });
+
+        canvas.addEventListener("pointerdown", (e) => {
+          if (!running) return;
+          if (e.clientX < W / 2 && !touchStick.active) {
+            touchStick.active = true;
+            touchStick.id = e.pointerId;
+            touchStick.ox = e.clientX;
+            touchStick.oy = e.clientY;
+            touchStick.dx = 0;
+            touchStick.dy = 0;
+          } else if (e.clientX >= W / 2 && !touchThrottle.active) {
+            touchThrottle.active = true;
+            touchThrottle.id = e.pointerId;
+            touchThrottle.oy = e.clientY;
+            touchThrottle.base = plane.throttle;
+          }
+        });
+
+        canvas.addEventListener("pointermove", (e) => {
+          if (touchStick.active && e.pointerId === touchStick.id) {
+            touchStick.dx = clamp((e.clientX - touchStick.ox) / 70, -1, 1);
+            touchStick.dy = clamp((e.clientY - touchStick.oy) / 70, -1, 1);
+          }
+          if (touchThrottle.active && e.pointerId === touchThrottle.id) {
+            plane.throttle = clamp(touchThrottle.base + (touchThrottle.oy - e.clientY) / 220, 0, 1);
+          }
+        });
+
+        function endPointer(e) {
+          if (e.pointerId === touchStick.id) {
+            touchStick.active = false;
+            touchStick.id = -1;
+            touchStick.dx = 0;
+            touchStick.dy = 0;
+          }
+          if (e.pointerId === touchThrottle.id) {
+            touchThrottle.active = false;
+            touchThrottle.id = -1;
+          }
+        }
+        canvas.addEventListener("pointerup", endPointer);
+        canvas.addEventListener("pointercancel", endPointer);
+
+        // ---------- 物理 ----------
+        function updatePhysics(dt) {
+          let pitchInput = 0;
+          let rollInput = 0;
+
+          if (keys["ArrowUp"]) pitchInput += 1;
+          if (keys["ArrowDown"]) pitchInput -= 1;
+          if (keys["ArrowLeft"]) rollInput -= 1;
+          if (keys["ArrowRight"]) rollInput += 1;
+          if (keys["w"]) plane.throttle = clamp(plane.throttle + dt * 0.5, 0, 1);
+          if (keys["s"]) plane.throttle = clamp(plane.throttle - dt * 0.5, 0, 1);
+
+          if (touchStick.active) {
+            pitchInput += -touchStick.dy;
+            rollInput += touchStick.dx;
+          }
+          pitchInput = clamp(pitchInput, -1, 1);
+          rollInput = clamp(rollInput, -1, 1);
+
+          // 滚转：有输入时转动，无输入时缓慢回平
+          if (rollInput !== 0) {
+            plane.roll = clamp(plane.roll + rollInput * ROLL_RATE * dt, -MAX_ROLL, MAX_ROLL);
+          } else {
+            plane.roll *= Math.pow(0.35, dt);
+          }
+
+          // 俯仰
+          plane.pitch = clamp(plane.pitch + pitchInput * PITCH_RATE * dt, -MAX_PITCH, MAX_PITCH);
+
+          // 失速：速度过低时机头自动下坠
+          stallWarning = plane.speed < STALL_SPEED;
+          if (stallWarning) {
+            const severity = (STALL_SPEED - plane.speed) / STALL_SPEED;
+            plane.pitch -= severity * 1.6 * dt;
+          }
+
+          // 滚转带来偏航（转弯）
+          plane.yaw += Math.sin(plane.roll) * TURN_FACTOR * dt * (0.6 + plane.speed / MAX_SPEED);
+
+          // 速度：油门推力 + 俯冲加速 / 拉升减速
+          const targetSpeed = MIN_SPEED + (MAX_SPEED - MIN_SPEED) * plane.throttle;
+          plane.speed += (targetSpeed - plane.speed) * 0.55 * dt;
+          plane.speed += -Math.sin(plane.pitch) * GRAVITY * 0.55 * dt * 10;
+          plane.speed = clamp(plane.speed, 12, MAX_SPEED * 1.25);
+
+          // 位置
+          const cp = Math.cos(plane.pitch);
+          const fx = cp * Math.sin(plane.yaw);
+          const fy = Math.sin(plane.pitch);
+          const fz = cp * Math.cos(plane.yaw);
+
+          const prevY = plane.y;
+          plane.x += fx * plane.speed * dt;
+          plane.y += fy * plane.speed * dt;
+          plane.z += fz * plane.speed * dt;
+          plane.vy = (plane.y - prevY) / dt;
+
+          lowAltWarning = plane.y < 60 && plane.vy < 0;
+
+          flightTime += dt;
+          score += dt * 2; // 滞空积分
+
+          if (ringFlash > 0) ringFlash -= dt;
+
+          // 光圈判定
+          const ring = rings[0];
+          if (ring) {
+            const dx = plane.x - ring.x;
+            const dy = plane.y - ring.y;
+            const dz = plane.z - ring.z;
+            const d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (d < RING_RADIUS) {
+              ringsPassed += 1;
+              score += 100;
+              ringFlash = 0.8;
+              rings.shift();
+              rings.push(spawnRing(rings[rings.length - 1]));
+            } else if (d > 1400 && dz * Math.cos(plane.yaw) + dx * Math.sin(plane.yaw) < 0) {
+              // 远远飞过了就换下一个，避免卡死
+              rings.shift();
+              rings.push(spawnRing(rings[rings.length - 1]));
+            }
+          }
+
+          // 地面判定
+          if (plane.y <= 3) {
+            plane.y = 3;
+            const gentle = plane.vy > -7 && Math.abs(plane.roll) < 0.3 && plane.speed < 70;
+            endGame(gentle);
+          }
+        }
+
+        // ---------- 渲染 ----------
+        function toCamera(px, py, pz) {
+          const dx = px - plane.x;
+          const dy = py - plane.y;
+          const dz = pz - plane.z;
+          const cy = Math.cos(plane.yaw);
+          const sy = Math.sin(plane.yaw);
+          const cp = Math.cos(plane.pitch);
+          const sp = Math.sin(plane.pitch);
+          const x1 = dx * cy - dz * sy;
+          const z1 = dx * sy + dz * cy;
+          const y2 = dy * cp - z1 * sp;
+          const z2 = dy * sp + z1 * cp;
+          return { x: x1, y: y2, z: z2 };
+        }
+
+        function project(c) {
+          return {
+            x: W / 2 + (FOCAL * c.x) / c.z,
+            y: H / 2 - (FOCAL * c.y) / c.z
+          };
+        }
+
+        // 把线段裁剪到近平面之后再投影；不可见返回 null
+        function projectSegment(a, b) {
+          let ca = toCamera(a.x, a.y, a.z);
+          let cb = toCamera(b.x, b.y, b.z);
+          if (ca.z <= NEAR && cb.z <= NEAR) return null;
+          if (ca.z <= NEAR || cb.z <= NEAR) {
+            const t = (NEAR - ca.z) / (cb.z - ca.z);
+            const ix = ca.x + (cb.x - ca.x) * t;
+            const iy = ca.y + (cb.y - ca.y) * t;
+            if (ca.z <= NEAR) ca = { x: ix, y: iy, z: NEAR };
+            else cb = { x: ix, y: iy, z: NEAR };
+          }
+          return [project(ca), project(cb)];
+        }
+
+        function drawWorld() {
+          const diag = Math.sqrt(W * W + H * H);
+
+          ctx.save();
+          ctx.translate(W / 2, H / 2);
+          ctx.rotate(-plane.roll);
+          ctx.translate(-W / 2, -H / 2);
+
+          // 地平线位置（屏幕坐标，越大越靠下）
+          const horizonY = H / 2 + FOCAL * Math.tan(plane.pitch);
+
+          // 天空
+          const sky = ctx.createLinearGradient(0, horizonY - diag, 0, horizonY);
+          sky.addColorStop(0, "#0b2d5c");
+          sky.addColorStop(0.55, "#2f6fb4");
+          sky.addColorStop(1, "#a8d4f0");
+          ctx.fillStyle = sky;
+          ctx.fillRect(-diag, horizonY - diag * 2, W + diag * 2, diag * 2);
+
+          // 地面
+          const ground = ctx.createLinearGradient(0, horizonY, 0, horizonY + diag);
+          ground.addColorStop(0, "#7fae6e");
+          ground.addColorStop(0.25, "#5d9457");
+          ground.addColorStop(1, "#2f5e3e");
+          ctx.fillStyle = ground;
+          ctx.fillRect(-diag, horizonY, W + diag * 2, diag * 2);
+
+          // 地面网格（田野线条）
+          ctx.lineWidth = 1.4;
+          const gx0 = Math.floor((plane.x - VIEW_DIST) / GRID) * GRID;
+          const gz0 = Math.floor((plane.z - VIEW_DIST) / GRID) * GRID;
+          for (let gx = gx0; gx <= plane.x + VIEW_DIST; gx += GRID) {
+            const seg = projectSegment(
+              { x: gx, y: 0, z: plane.z - VIEW_DIST },
+              { x: gx, y: 0, z: plane.z + VIEW_DIST }
+            );
+            if (seg) {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+              ctx.beginPath();
+              ctx.moveTo(seg[0].x, seg[0].y);
+              ctx.lineTo(seg[1].x, seg[1].y);
+              ctx.stroke();
+            }
+          }
+          for (let gz = gz0; gz <= plane.z + VIEW_DIST; gz += GRID) {
+            const seg = projectSegment(
+              { x: plane.x - VIEW_DIST, y: 0, z: gz },
+              { x: plane.x + VIEW_DIST, y: 0, z: gz }
+            );
+            if (seg) {
+              ctx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+              ctx.beginPath();
+              ctx.moveTo(seg[0].x, seg[0].y);
+              ctx.lineTo(seg[1].x, seg[1].y);
+              ctx.stroke();
+            }
+          }
+
+          drawBuildings();
+          drawClouds();
+          drawRings();
+
+          ctx.restore();
+        }
+
+        function drawBuildings() {
+          const CELL = 640;
+          const cx0 = Math.floor((plane.x - VIEW_DIST) / CELL);
+          const cx1 = Math.floor((plane.x + VIEW_DIST) / CELL);
+          const cz0 = Math.floor((plane.z - VIEW_DIST) / CELL);
+          const cz1 = Math.floor((plane.z + VIEW_DIST) / CELL);
+
+          const items = [];
+          for (let iz = cz0; iz <= cz1; iz++) {
+            for (let ix = cx0; ix <= cx1; ix++) {
+              const r = hash2(ix, iz);
+              if (r < 0.62) continue;
+              const bx = (ix + 0.2 + hash2(ix * 7 + 1, iz) * 0.6) * CELL;
+              const bz = (iz + 0.2 + hash2(ix, iz * 5 + 3) * 0.6) * CELL;
+              const cam = toCamera(bx, 0, bz);
+              if (cam.z < NEAR + 4 || cam.z > VIEW_DIST) continue;
+              const height = 50 + hash2(ix * 3, iz * 11) * 160;
+              const width = 46 + hash2(ix * 13, iz * 17) * 50;
+              const isTree = r > 0.9;
+              items.push({ bx, bz, cam, height: isTree ? 26 : height, width: isTree ? 22 : width, isTree, r });
+            }
+          }
+          items.sort((a, b) => b.cam.z - a.cam.z);
+
+          for (const it of items) {
+            const base = project(it.cam);
+            const top = project(toCamera(it.bx, it.height, it.bz));
+            const halfW = ((FOCAL * it.width) / it.cam.z) / 2;
+            const fog = clamp(1 - it.cam.z / VIEW_DIST, 0, 1);
+
+            if (it.isTree) {
+              ctx.fillStyle = `rgba(34, 82, 45, ${0.35 + fog * 0.55})`;
+              ctx.beginPath();
+              ctx.moveTo(base.x - halfW, base.y);
+              ctx.lineTo(base.x, top.y);
+              ctx.lineTo(base.x + halfW, base.y);
+              ctx.closePath();
+              ctx.fill();
+            } else {
+              const shade = 90 + it.r * 80;
+              ctx.fillStyle = `rgba(${shade}, ${shade + 10}, ${shade + 26}, ${0.4 + fog * 0.6})`;
+              ctx.fillRect(base.x - halfW, top.y, halfW * 2, base.y - top.y);
+              // 窗户
+              if (it.cam.z < 1400 && !it.isTree) {
+                ctx.fillStyle = `rgba(255, 232, 150, ${0.25 + fog * 0.3})`;
+                const rows = 4;
+                for (let wy = 1; wy <= rows; wy++) {
+                  const yy = top.y + ((base.y - top.y) * wy) / (rows + 1);
+                  ctx.fillRect(base.x - halfW * 0.6, yy, halfW * 1.2, Math.max(1.5, halfW * 0.12));
+                }
+              }
+            }
+          }
+        }
+
+        function drawClouds() {
+          const CELL = 1500;
+          const cx0 = Math.floor((plane.x - VIEW_DIST) / CELL);
+          const cx1 = Math.floor((plane.x + VIEW_DIST) / CELL);
+          const cz0 = Math.floor((plane.z - VIEW_DIST) / CELL);
+          const cz1 = Math.floor((plane.z + VIEW_DIST) / CELL);
+
+          for (let iz = cz0; iz <= cz1; iz++) {
+            for (let ix = cx0; ix <= cx1; ix++) {
+              const r = hash2(ix * 31 + 7, iz * 23 + 5);
+              if (r < 0.55) continue;
+              const wx = (ix + hash2(ix, iz * 9)) * CELL;
+              const wz = (iz + hash2(ix * 5, iz)) * CELL;
+              const wy = 650 + r * 420;
+              const cam = toCamera(wx, wy, wz);
+              if (cam.z < NEAR + 10 || cam.z > VIEW_DIST) continue;
+              const p = project(cam);
+              const size = (FOCAL * (160 + r * 200)) / cam.z;
+              const alpha = clamp(1 - cam.z / VIEW_DIST, 0, 1) * 0.55;
+              ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+              ctx.beginPath();
+              ctx.ellipse(p.x, p.y, size, size * 0.38, 0, 0, Math.PI * 2);
+              ctx.ellipse(p.x - size * 0.5, p.y + size * 0.1, size * 0.55, size * 0.25, 0, 0, Math.PI * 2);
+              ctx.ellipse(p.x + size * 0.55, p.y + size * 0.12, size * 0.5, size * 0.22, 0, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+        }
+
+        function drawRings() {
+          for (let i = rings.length - 1; i >= 0; i--) {
+            const ring = rings[i];
+            const cam = toCamera(ring.x, ring.y, ring.z);
+            if (cam.z < NEAR + 2) continue;
+            const p = project(cam);
+            const r = (FOCAL * RING_RADIUS) / cam.z;
+            if (r < 1.5) continue;
+            const isNext = i === 0;
+            const glow = isNext ? 0.95 : 0.45;
+            ctx.lineWidth = Math.max(2, r * 0.12);
+            ctx.strokeStyle = isNext ? `rgba(255, 211, 92, ${glow})` : `rgba(150, 205, 255, ${glow})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.lineWidth = Math.max(1, r * 0.05);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${glow * 0.7})`;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, r * 0.82, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+
+        // 屏幕中央下方的飞机（追逐视角风格）
+        function drawPlane() {
+          const cx = W / 2;
+          const cy = H * 0.68;
+          ctx.save();
+          ctx.translate(cx, cy);
+          ctx.rotate(plane.roll * 0.5);
+
+          // 阴影感的机身
+          ctx.fillStyle = "#dce8f2";
+          ctx.strokeStyle = "#39536b";
+          ctx.lineWidth = 2;
+
+          // 机翼
+          ctx.beginPath();
+          ctx.moveTo(0, -8);
+          ctx.lineTo(-96, 16);
+          ctx.lineTo(-90, 26);
+          ctx.lineTo(0, 12);
+          ctx.lineTo(90, 26);
+          ctx.lineTo(96, 16);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // 机身
+          ctx.beginPath();
+          ctx.moveTo(0, -36);
+          ctx.quadraticCurveTo(13, -8, 11, 30);
+          ctx.quadraticCurveTo(0, 40, -11, 30);
+          ctx.quadraticCurveTo(-13, -8, 0, -36);
+          ctx.closePath();
+          ctx.fillStyle = "#f2f7fb";
+          ctx.fill();
+          ctx.stroke();
+
+          // 尾翼
+          ctx.beginPath();
+          ctx.moveTo(0, 26);
+          ctx.lineTo(-30, 44);
+          ctx.lineTo(-26, 50);
+          ctx.lineTo(0, 40);
+          ctx.lineTo(26, 50);
+          ctx.lineTo(30, 44);
+          ctx.closePath();
+          ctx.fillStyle = "#dce8f2";
+          ctx.fill();
+          ctx.stroke();
+
+          // 座舱
+          ctx.beginPath();
+          ctx.ellipse(0, -16, 6, 10, 0, 0, Math.PI * 2);
+          ctx.fillStyle = "#3f7fb5";
+          ctx.fill();
+
+          ctx.restore();
+        }
+
+        function drawHUD() {
+          ctx.save();
+          ctx.font = "600 14px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+
+          // 顶部信息条
+          const pad = 12;
+          const barH = 54;
+          ctx.fillStyle = "rgba(6, 20, 36, 0.55)";
+          ctx.beginPath();
+          ctx.roundRect(pad, pad, W - pad * 2, barH, 12);
+          ctx.fill();
+
+          const heading = ((plane.yaw * 180) / Math.PI % 360 + 360) % 360;
+          const items = [
+            ["速度", `${Math.round(plane.speed * 3.6)} km/h`],
+            ["高度", `${Math.round(plane.y)} m`],
+            ["航向", `${Math.round(heading)}°`],
+            ["油门", `${Math.round(plane.throttle * 100)}%`],
+            ["光圈", `${ringsPassed}`],
+            ["得分", `${Math.round(score)}`]
+          ];
+          const slot = (W - pad * 2) / items.length;
+          items.forEach(([label, value], i) => {
+            const x = pad + slot * i + slot / 2;
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#8fb8dc";
+            ctx.fillText(label, x, pad + 22);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "700 16px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+            ctx.fillText(value, x, pad + 43);
+            ctx.font = "600 14px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+          });
+
+          // 油门竖条（右侧）
+          const tx = W - 30;
+          const ty = H / 2 - 80;
+          ctx.fillStyle = "rgba(6, 20, 36, 0.5)";
+          ctx.beginPath();
+          ctx.roundRect(tx - 9, ty, 18, 160, 9);
+          ctx.fill();
+          ctx.fillStyle = "#6fc6ff";
+          const th = 152 * plane.throttle;
+          ctx.beginPath();
+          ctx.roundRect(tx - 5, ty + 4 + (152 - th), 10, th, 5);
+          ctx.fill();
+
+          // 指向下一个光圈的箭头
+          const ring = rings[0];
+          if (ring) {
+            const cam = toCamera(ring.x, ring.y, ring.z);
+            let ang;
+            let offscreen = false;
+            if (cam.z > NEAR) {
+              const p = project(cam);
+              // 屏幕内不画箭头，屏幕外画边缘指示
+              if (p.x < 30 || p.x > W - 30 || p.y < 80 || p.y > H - 30) {
+                offscreen = true;
+                ang = Math.atan2(p.y - H / 2, p.x - W / 2);
+              }
+            } else {
+              offscreen = true;
+              ang = Math.atan2(-cam.y, cam.x);
+              ang = cam.x >= 0 ? 0 : Math.PI;
+            }
+            if (offscreen) {
+              const rx = clamp(W / 2 + Math.cos(ang) * (W / 2 - 50), 50, W - 50);
+              const ry = clamp(H / 2 + Math.sin(ang) * (H / 2 - 90), 100, H - 60);
+              ctx.save();
+              ctx.translate(rx, ry);
+              ctx.rotate(ang);
+              ctx.fillStyle = "rgba(255, 211, 92, 0.95)";
+              ctx.beginPath();
+              ctx.moveTo(16, 0);
+              ctx.lineTo(-8, -10);
+              ctx.lineTo(-3, 0);
+              ctx.lineTo(-8, 10);
+              ctx.closePath();
+              ctx.fill();
+              ctx.restore();
+            }
+            // 距离提示
+            const d = Math.sqrt(
+              (plane.x - ring.x) ** 2 + (plane.y - ring.y) ** 2 + (plane.z - ring.z) ** 2
+            );
+            ctx.textAlign = "center";
+            ctx.fillStyle = "rgba(255, 225, 140, 0.9)";
+            ctx.fillText(`下一个光圈 ${Math.round(d)} m`, W / 2, pad + barH + 24);
+          }
+
+          // 警告
+          let warnY = H * 0.3;
+          ctx.textAlign = "center";
+          ctx.font = "800 24px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+          if (stallWarning) {
+            ctx.fillStyle = `rgba(255, 110, 90, ${0.6 + 0.4 * Math.sin(flightTime * 12)})`;
+            ctx.fillText("⚠ 失速！加大油门或俯冲", W / 2, warnY);
+            warnY += 36;
+          }
+          if (lowAltWarning) {
+            ctx.fillStyle = `rgba(255, 180, 80, ${0.6 + 0.4 * Math.sin(flightTime * 10)})`;
+            ctx.fillText("⚠ 高度过低，拉升！", W / 2, warnY);
+          }
+
+          // 穿过光圈的闪光
+          if (ringFlash > 0) {
+            ctx.fillStyle = `rgba(255, 220, 120, ${ringFlash * 0.9})`;
+            ctx.font = "800 34px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+            ctx.fillText("+100", W / 2, H * 0.42);
+          }
+
+          if (paused) {
+            ctx.fillStyle = "rgba(4, 14, 28, 0.6)";
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "800 36px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+            ctx.fillText("已暂停 · 按 P 继续", W / 2, H / 2);
+          }
+
+          ctx.restore();
+        }
+
+        // ---------- 游戏流程 ----------
+        function startGame() {
+          resetGame();
+          startOverlay.classList.add("hidden");
+          resultOverlay.classList.add("hidden");
+          running = true;
+          paused = false;
+        }
+
+        function endGame(landed) {
+          running = false;
+          if (landed) {
+            score += 250;
+            resultTitle.textContent = "平稳着陆！";
+            resultTitle.className = "landed";
+            resultText.textContent = "教科书级别的降落，奖励 250 分。要不要再来一次更远的飞行？";
+          } else {
+            resultTitle.textContent = "飞机坠毁了…";
+            resultTitle.className = "crash";
+            resultText.textContent = "下次试着提前拉升、放平机翼并收小油门，就能安全着陆。";
+          }
+          statScore.textContent = Math.round(score);
+          statRings.textContent = ringsPassed;
+          statTime.textContent = `${Math.round(flightTime)}s`;
+          resultOverlay.classList.remove("hidden");
+        }
+
+        startButton.addEventListener("click", startGame);
+        restartButton.addEventListener("click", startGame);
+
+        // ---------- 主循环 ----------
+        let lastTime = performance.now();
+        function frame(now) {
+          const dt = Math.min((now - lastTime) / 1000, 0.05);
+          lastTime = now;
+
+          if (running && !paused) {
+            updatePhysics(dt);
+          }
+
+          ctx.clearRect(0, 0, W, H);
+          drawWorld();
+          if (running || resultOverlay.classList.contains("hidden") === false) {
+            drawPlane();
+          }
+          if (running) {
+            drawHUD();
+          }
+
+          requestAnimationFrame(frame);
+        }
+
+        // 启动画面背景里让飞机缓慢巡航，更有氛围
+        resetGame();
+        requestAnimationFrame(frame);
+
+        // 未开始时的自动巡航展示
+        setInterval(() => {
+          if (!running && startOverlay && !startOverlay.classList.contains("hidden")) {
+            plane.yaw += 0.0035;
+            const cp = Math.cos(plane.pitch);
+            plane.x += cp * Math.sin(plane.yaw) * 1.4;
+            plane.z += cp * Math.cos(plane.yaw) * 1.4;
+          }
+        }, 16);
+      })();
+    </script>
+  </body>
+</html>
